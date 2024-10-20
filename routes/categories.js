@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Category = require("../models/Category");
+const Category = require("../models/category");
 const { isAuthenticated } = require("../middleware/auth");
 
 // create a new category
