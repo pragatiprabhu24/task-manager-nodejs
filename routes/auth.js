@@ -1,7 +1,11 @@
+// routes/auth.js
 const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
-const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Signup Route
 router.post("/signup", async (req, res) => {
@@ -18,10 +22,14 @@ router.post("/signup", async (req, res) => {
     }
 
     const newUser = new User({ username, email, phone, password });
+
     await newUser.save();
 
-    req.session.user = newUser;
-    res.status(201).json({ message: "User created successfully" });
+    const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.status(201).json({ message: "User created successfully", token });
   } catch (error) {
     res.status(500).json({ message: "Error creating user", error });
   }
@@ -53,8 +61,11 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    req.session.user = user;
-    res.status(200).json({ message: "Logged in successfully" });
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.status(200).json({ message: "Logged in successfully", token });
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error });
   }
@@ -62,12 +73,7 @@ router.post("/login", async (req, res) => {
 
 // Logout Route
 router.post("/logout", (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ message: "Error logging out" });
-    }
-    res.status(200).json({ message: "Logged out successfully" });
-  });
+  res.status(200).json({ message: "Logged out successfully" });
 });
 
 module.exports = router;
